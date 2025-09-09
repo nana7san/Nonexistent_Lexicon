@@ -1,0 +1,28 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { scaryDots, extractAExcerpt, pickTopTags } from '../lib/utils';
+
+export interface Props { item: CollectionEntry<'words'> }
+const { item } = Astro.props;
+const url = `/w/${item.slug}`;
+const title = item.data['語'];
+const yomi = item.data['読み'];
+const scary = item.data['怖度'];
+const tags = item.data['タグ'] as Record<string, string[]>;
+const topTags = pickTopTags(tags, 3);
+const excerpt = extractAExcerpt(item.body);
+---
+<div class="card entry">
+  <div class="card-header" style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+    <h3 style="margin:0;">
+      <a href={url} aria-label={`詳細へ: ${title}`}>{title}</a>
+    </h3>
+    <span class="meta">[{yomi}]</span>
+    <span class="badge" aria-label={`怖度: ${scary}`}>{scaryDots(scary)}</span>
+  </div>
+  <div class="meta">
+    {topTags.map((t) => <span class="pill">#{t}</span>)}
+  </div>
+  {excerpt && <p style="margin-top:8px;">{excerpt}</p>}
+  
+</div>

@@ -1,0 +1,13 @@
+---
+export interface Props { tags: Record<string, string[]> }
+const { tags } = Astro.props;
+---
+<div class="meta" style="margin-top:8px;">
+  {Object.entries(tags).map(([k, arr]) => (
+    <span>
+      <span class="pill">{k}</span>
+      {arr.map((t) => <a class="pill" href={`/tags/${encodeURIComponent(t)}`}>#{t}</a>)}
+    </span>
+  ))}
+  </div>
+

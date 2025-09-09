@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import WordCard from '../components/WordCard.astro';
+import { getCollection } from 'astro:content';
+import { extractAExcerpt } from '../lib/utils';
+
+const items = (await getCollection('words')).sort((a,b)=> a.data['語'].localeCompare(b.data['語'], 'ja'));
+---
+<Base title="存在しない辞典 v5">
+  <h2>新着（初期10語）</h2>
+  <div id="cards" class="grid cards">
+    {items.map((it) => {
+      const ex = extractAExcerpt(it.body);
+      return (
+        <div data-title={it.data['語']} data-yomi={it.data['読み']} data-tags={[...it.data['タグ']['情緒'],...it.data['タグ']['モチーフ'],...it.data['タグ']['仕掛け']].join(',')} data-scary={it.data['怖度']} data-excerpt={ex}>
+          <WordCard item={it} />
+        </div>
+      );
+    })}
+  </div>
+  <p class="meta" id="emptystate" hidden>条件に合致する語はありません。怖度/検索を調整してください。</p>
+  <script>
+    const q = document.getElementById('q');
+    const scary = document.getElementById('scary');
+    const cards = Array.from(document.querySelectorAll('#cards > div'));
+    const empty = document.getElementById('emptystate');
+    function apply() {
+      const s = (q.value || '').trim();
+      const max = parseInt(scary.value, 10) || 5;
+      let visible = 0;
+      for (const el of cards) {
+        const hit = match(el, s) && parseInt(el.dataset.scary || '5', 10) <= max;
+        el.style.display = hit ? '' : 'none';
+        if (hit) visible++;
+      }
+      empty.hidden = visible !== 0;
+    }
+    function match(el, s) {
+      if (!s) return true;
+      const hay = [el.dataset.title, el.dataset.yomi, el.dataset.tags, el.dataset.excerpt].join(' ').toLowerCase();
+      return hay.includes(s.toLowerCase());
+    }
+    q?.addEventListener('input', () => { window.setTimeout(apply, 200); });
+    scary?.addEventListener('change', apply);
+    apply();
+  </script>
+</Base>

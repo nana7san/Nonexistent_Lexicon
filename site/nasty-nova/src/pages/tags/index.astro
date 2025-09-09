@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const items = await getCollection('words');
+const cats = ['情緒','モチーフ','仕掛け'] as const;
+const cloud = Object.fromEntries(cats.map((c)=>[c, new Map<string, number>()]));
+for (const it of items) {
+  for (const c of cats) {
+    for (const t of it.data['タグ'][c] || []) {
+      cloud[c].set(t, (cloud[c].get(t) || 0) + 1);
+    }
+  }
+}
+---
+<Base title="タグで探す - 存在しない辞典 v5">
+  <h2>タグで探す</h2>
+  {Object.entries(cloud).map(([cat, map]) => (
+    <section>
+      <h3>{cat}</h3>
+      <p>
+        {Array.from(map.entries()).sort((a,b)=> b[1]-a[1]).map(([t, n]) => (
+          <a class="pill" href={`/tags/${encodeURIComponent(t)}`}>#{t} ({n})</a>
+        ))}
+      </p>
+    </section>
+  ))}
+</Base>
+

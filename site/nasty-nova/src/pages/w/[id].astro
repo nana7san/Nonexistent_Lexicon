@@ -1,0 +1,40 @@
+---
+import Base from '../../layouts/Base.astro';
+import WordEntry from '../../components/WordEntry.astro';
+import TagPills from '../../components/TagPills.astro';
+import { getCollection } from 'astro:content';
+import { related } from '../../lib/related';
+
+export async function getStaticPaths() {
+  const items = await getCollection('words');
+  return items.map((it) => ({ params: { id: it.slug } }));
+}
+
+const { id } = Astro.params;
+const all = await getCollection('words');
+const item = all.find((x) => x.slug === id);
+if (!item) {
+  return Astro.redirect('/404');
+}
+const rel = related(item, all, 4);
+const { Content } = await item.render();
+---
+<Base title={`${item.data['語']} - 存在しない辞典 v5`}>
+  <WordEntry item={item}>
+    <TagPills tags={item.data['タグ']} />
+    <div class="divider"></div>
+    <article class="entry-body">
+      <Content />
+    </article>
+  </WordEntry>
+  {rel.length > 0 && (
+    <section style="margin-top:24px;">
+      <h3>関連</h3>
+      <ul>
+        {rel.map((r) => (
+          <li><a href={`/w/${r.slug}`}>{r.data['語']} [{r.data['読み']}]</a></li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

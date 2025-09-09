@@ -1,0 +1,38 @@
+---
+import Base from '../../layouts/Base.astro';
+import WordCard from '../../components/WordCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const items = await getCollection('words');
+  const tags = new Set<string>();
+  for (const it of items) {
+    for (const k of ['情緒','モチーフ','仕掛け'] as const) {
+      for (const t of it.data['タグ'][k] || []) tags.add(t);
+    }
+  }
+  return Array.from(tags).map((t) => ({ params: { tag: t } }));
+}
+
+const { tag } = Astro.params;
+const items = await getCollection('words');
+const filtered = items.filter((it) => {
+  const t = tag || '';
+  const tags = [
+    ...(it.data['タグ']['情緒'] || []),
+    ...(it.data['タグ']['モチーフ'] || []),
+    ...(it.data['タグ']['仕掛け'] || []),
+  ];
+  return tags.includes(t as string);
+});
+---
+<Base title={`タグ: ${tag} - 存在しない辞典 v5`}>
+  <h2>タグ: {tag}</h2>
+  {filtered.length === 0 ? (
+    <p class="meta">結果がありません。</p>
+  ) : (
+    <div class="grid cards">
+      {filtered.map((it) => (<WordCard item={it} />))}
+    </div>
+  )}
+</Base>

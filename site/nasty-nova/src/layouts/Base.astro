@@ -1,0 +1,57 @@
+---
+export interface Props {
+  title?: string;
+  searchPlaceholder?: string;
+  scaryMax?: number;
+}
+const { title = '存在しない辞典 v5', searchPlaceholder = '検索: 語・読み・タグ', scaryMax = 3 } = Astro.props;
+---
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/theme.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="bar">
+        <a class="logo" href="/">存在しない辞典</a>
+        <form id="search-form" role="search" style="flex:1; display:flex; gap:8px;">
+          <label class="sr-only" for="q">検索</label>
+          <input id="q" name="q" type="search" placeholder={searchPlaceholder} autocomplete="off" />
+          <label class="sr-only" for="scary">怖度上限</label>
+          <select id="scary" name="scary">
+            <option value="1">怖度 ≤1</option>
+            <option value="2">怖度 ≤2</option>
+            <option value="3" selected={scaryMax===3}>怖度 ≤3</option>
+            <option value="4">怖度 ≤4</option>
+            <option value="5">怖度 ≤5</option>
+          </select>
+        </form>
+        <nav>
+          <a href="/about">About</a>
+          <span> | </span>
+          <a href="/tags/">Tags</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      <slot />
+    </main>
+    <script>
+      // Keyboard focus to search with '/'
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && (document.activeElement?.tagName || '') !== 'INPUT') {
+          const input = document.getElementById('q');
+          if (input) { e.preventDefault(); input.focus(); }
+        }
+      });
+    </script>
+  </body>
+  
+</html>
+

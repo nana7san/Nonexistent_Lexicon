@@ -1,0 +1,23 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { scaryDots } from '../lib/utils';
+
+export interface Props { item: CollectionEntry<'words'>, scaryMax?: number }
+const { item, scaryMax = 3 } = Astro.props;
+const data = item.data;
+const cw = data['A11y']?.contentWarnings || [];
+const showB = data['怖度'] <= (scaryMax ?? 5);
+---
+<article>
+  <header>
+    <h1 style="margin-bottom: 0.25rem;">{data['語']}</h1>
+    <div class="meta">[{data['読み']}]／{data['品詞']}／怖度 {scaryDots(data['怖度'])}</div>
+  </header>
+  {cw.length > 0 && (
+    <div class="card" style="margin-top:12px; border-color: var(--warn);">
+      <strong class="danger">CWs</strong>: {cw.join('、')}
+    </div>
+  )}
+  <div class="divider"></div>
+  <slot />
+</article>

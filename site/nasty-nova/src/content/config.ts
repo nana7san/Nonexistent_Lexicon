@@ -19,8 +19,9 @@ const words = defineCollection({
       .object({ contentWarnings: z.array(z.string()).default([]) })
       .partial()
       .default({}),
+    'バグ演出': z.boolean().default(false),
+    'モジバケ演出': z.boolean().default(false),
   }),
 });
 
 export const collections = { words };
-

@@ -15,6 +15,15 @@ const { title = '存在しない辞典 v5', searchPlaceholder = '検索: 語・�
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/reset.css" />
     <link rel="stylesheet" href="/theme.css" />
+    <script>
+      // initialize intensity early to avoid flash
+      (function(){
+        try {
+          var v = localStorage.getItem('intensity') || 'full';
+          document.documentElement.setAttribute('data-intensity', v);
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
   </head>
   <body>
     <header class="site">
@@ -23,15 +32,17 @@ const { title = '存在しない辞典 v5', searchPlaceholder = '検索: 語・�
         <form id="search-form" role="search" style="flex:1; display:flex; gap:8px;">
           <label class="sr-only" for="q">検索</label>
           <input id="q" name="q" type="search" placeholder={searchPlaceholder} autocomplete="off" />
-          <label class="sr-only" for="scary">怖度上限</label>
+          <label class="sr-only" for="scary">怖度</label>
           <select id="scary" name="scary">
-            <option value="1">怖度 ≤1</option>
-            <option value="2">怖度 ≤2</option>
-            <option value="3" selected={scaryMax===3}>怖度 ≤3</option>
-            <option value="4">怖度 ≤4</option>
-            <option value="5">怖度 ≤5</option>
+            <option value="all">すべて</option>
+            <option value="1">怖度 1</option>
+            <option value="2">怖度 2</option>
+            <option value="3" selected={scaryMax===3}>怖度 3</option>
+            <option value="4">怖度 4</option>
+            <option value="5">怖度 5</option>
           </select>
         </form>
+        <button id="intensity-toggle" type="button" aria-pressed="false" title="演出弱め (ソフト/フル切替)">演出弱め <span class="sr-only">状態</span></button>
         <nav>
           <a href="/about">About</a>
           <span> | </span>
@@ -50,8 +61,24 @@ const { title = '存在しない辞典 v5', searchPlaceholder = '検索: 語・�
           if (input) { e.preventDefault(); input.focus(); }
         }
       });
+      // Intensity toggle wiring
+      const btn = document.getElementById('intensity-toggle');
+      if (btn) {
+        const applyIntensity = (v) => {
+          document.documentElement.setAttribute('data-intensity', v);
+          try { localStorage.setItem('intensity', v); } catch (e) {}
+          btn.setAttribute('aria-pressed', String(v === 'soft'));
+          btn.textContent = (v === 'soft') ? '演出弱め ON' : '演出弱め OFF';
+        };
+        const cur = document.documentElement.getAttribute('data-intensity') || 'full';
+        btn.setAttribute('aria-pressed', String(cur === 'soft'));
+        btn.textContent = (cur === 'soft') ? '演出弱め ON' : '演出弱め OFF';
+        btn.addEventListener('click', () => {
+          const next = (document.documentElement.getAttribute('data-intensity') === 'soft') ? 'full' : 'soft';
+          applyIntensity(next);
+        });
+      }
     </script>
   </body>
   
 </html>
-

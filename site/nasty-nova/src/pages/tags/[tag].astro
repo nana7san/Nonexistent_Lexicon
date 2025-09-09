@@ -26,7 +26,7 @@ const filtered = items.filter((it) => {
   return tags.includes(t as string);
 });
 ---
-<Base title={`タグ: ${tag} - 存在しない辞典 v5`}>
+<Base title={`タグ: ${tag} - 存在しない辞典`}>
   <h2>タグ: {tag}</h2>
   {filtered.length === 0 ? (
     <p class="meta">結果がありません。</p>

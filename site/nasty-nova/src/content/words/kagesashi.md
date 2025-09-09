@@ -11,7 +11,7 @@ id: "kagesashi"
   仕掛け: ["省略主語","同音異義"]
 関連: ["madowakisu","kaguchizu","ekitoone"]
 A11y:
-  contentWarnings: []
+  contentWarnings: ["転倒・落下の連想（軽微）"]
 ---
 
 ### 表の意味

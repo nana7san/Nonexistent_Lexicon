@@ -1,13 +1,13 @@
 ---
 export interface Props { tags: Record<string, string[]> }
 const { tags } = Astro.props;
+// Flatten category groups (情緒/モチーフ/仕掛け etc.) into unique tag list
+const flat: string[] = Array.from(new Set(
+  Object.values(tags || {}).flat()
+));
 ---
 <div class="meta" style="margin-top:8px;">
-  {Object.entries(tags).map(([k, arr]) => (
-    <span>
-      <span class="pill">{k}</span>
-      {arr.map((t) => <a class="pill" href={`/tags/${encodeURIComponent(t)}`}>#{t}</a>)}
-    </span>
+  {flat.map((t) => (
+    <a class="pill" href={`/tags/${encodeURIComponent(t)}`}>#{t}</a>
   ))}
-  </div>
-
+</div>

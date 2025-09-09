@@ -6,8 +6,8 @@ import { extractAExcerpt } from '../lib/utils';
 
 const items = (await getCollection('words')).sort((a,b)=> a.data['語'].localeCompare(b.data['語'], 'ja'));
 ---
-<Base title="存在しない辞典 v5">
-  <h2>新着（初期10語）</h2>
+<Base title="存在しない辞典">
+  <h2>新着</h2>
   <div id="cards" class="grid cards">
     {items.map((it) => {
       const ex = extractAExcerpt(it.body);
@@ -26,10 +26,12 @@ const items = (await getCollection('words')).sort((a,b)=> a.data['語'].localeCo
     const empty = document.getElementById('emptystate');
     function apply() {
       const s = (q.value || '').trim();
-      const max = parseInt(scary.value, 10) || 5;
+      const sel = (scary.value || 'all');
       let visible = 0;
       for (const el of cards) {
-        const hit = match(el, s) && parseInt(el.dataset.scary || '5', 10) <= max;
+        const scaryVal = parseInt(el.dataset.scary || '5', 10);
+        const scaryOk = sel === 'all' ? true : scaryVal === parseInt(sel, 10);
+        const hit = match(el, s) && scaryOk;
         el.style.display = hit ? '' : 'none';
         if (hit) visible++;
       }

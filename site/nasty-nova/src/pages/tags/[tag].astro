@@ -11,6 +11,8 @@ export async function getStaticPaths() {
       for (const t of it.data['タグ'][k] || []) tags.add(t);
     }
   }
+  // include special unknown tag explicitly
+  tags.add('？？？');
   return Array.from(tags).map((t) => ({ params: { tag: t } }));
 }
 
@@ -27,12 +29,121 @@ const filtered = items.filter((it) => {
 });
 ---
 <Base title={`タグ: ${tag} - 存在しない辞典`}>
-  <h2>タグ: {tag}</h2>
-  {filtered.length === 0 ? (
-    <p class="meta">結果がありません。</p>
+  {tag === '？？？' ? (
+    <>
+      <section class="weird-tags" aria-label="見出し：不明なタグ">
+        <h2 id="tag-title">？？？</h2>
+        <div class="meta" id="count" aria-live="polite" aria-atomic="true">項目数：不定（∞語）</div>
+        <div class="toolbar">
+          <button id="and" type="button" aria-pressed="false">AND</button>
+          <button id="or" type="button" aria-pressed="true">OR</button>
+        </div>
+        <p id="chipline">
+          {Array.from({length: 12}).map((_,i)=> (
+            <a class="pill ghost" tabindex="0" aria-disabled="true">{i % 2 === 0 ? '□□□□' : '？？？'}</a>
+          ))}
+        </p>
+      </section>
+      <div id="cards-weird" class="grid cards" aria-label="項目一覧：不定">
+        {Array.from({length: 8}).map((_,i) => (
+          <div>
+            <div class="card entry broken" tabindex="0">
+              <div class="card-header" style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+                <h3 style="margin:0;">
+                  <a class="nolink" href="#">{['未定義','null','(id: none)','undefined'][i%4]}</a>
+                </h3>
+                <span class="meta">[—]</span>
+                <span class="badge">{i % 2 === 0 ? '●●●●●' : '0'}</span>
+              </div>
+              <div class="meta">
+                <span class="pill">#□□□□</span>
+                <span class="pill">#？無？</span>
+              </div>
+              <p style="margin-top:8px;">…error</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p class="meta related-bottom" aria-hidden="true">関連タグ：<span class="pill" aria-disabled="true">？？？</span></p>
+      <footer class="meta" style="margin-top:20px;">
+        <small>辞典の外縁に到達しました。まだ定義されていません。</small>
+      </footer>
+      <style is:global>
+        {`
+        .weird-tags h2 { letter-spacing: .6px; }
+        .weird-tags #chipline .pill { pointer-events: none; color: var(--muted); }
+        .broken a.nolink { color: var(--text); text-decoration: none; cursor: not-allowed; }
+        .broken .badge { filter: contrast(1.1); }
+        .related-bottom { text-align: right; opacity: .8; }
+        /* focus misdirection: show double outline */
+        .broken:focus { outline: 2px solid var(--accent); box-shadow: 0 0 0 3px rgba(77,119,255,.15); }
+        `}
+      </style>
+      <script>
+      (function(){
+        const chips = Array.from(document.querySelectorAll('#chipline .pill'));
+        const count = document.getElementById('count');
+        const title = document.getElementById('tag-title');
+        const cards = document.getElementById('cards-weird');
+        const realTags = ['記憶','空白','階段','鏡','違和'];
+        // Garble chips and counts; briefly reveal real tag on toggle then revert
+        function garbleChips(){ chips.forEach((c,i)=>{ c.textContent = (i%2===0)?'□□□□':'？？？'; }); }
+        function randomCount(){ const pool = ['–3語','∞語','NaN語','0語','—語']; return pool[Math.floor(Math.random()*pool.length)]; }
+        function revealThenHide(){
+          chips.forEach((c,i)=>{ c.textContent = realTags[i%realTags.length]; });
+          const prev = count.textContent;
+          count.textContent = '項目数：不定（'+ (Math.floor(Math.random()*10)+1) +'語）';
+          setTimeout(()=>{ garbleChips(); count.textContent = prev; }, 300);
+        }
+        garbleChips();
+        // Toolbar handlers
+        document.getElementById('and')?.addEventListener('click', revealThenHide);
+        document.getElementById('or')?.addEventListener('click', revealThenHide);
+        // Infinite loop of cards: append clones when near bottom; recycle to avoid memory blow-up
+        const seed = Array.from(cards.querySelectorAll('.card.entry'));
+        function appendLoop(){
+          const atBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 6);
+          if (!atBottom) return;
+          for (let i=0;i<seed.length;i++){
+            const clone = seed[i].cloneNode(true);
+            // randomize superficial bits
+            const h = clone.querySelector('h3 a');
+            if (h) { const pool = ['未定義','null','(id: none)','undefined']; h.textContent = pool[Math.floor(Math.random()*pool.length)]; }
+            const badge = clone.querySelector('.badge'); if (badge) { badge.textContent = (Math.random()<0.5)?'●●●●●':'0'; }
+            cards.appendChild(clone.parentElement ? clone.parentElement : (function(){ const wrap = document.createElement('div'); wrap.appendChild(clone); return wrap; })());
+          }
+          // recycle: cap children
+          const wrappers = Array.from(cards.children);
+          if (wrappers.length > 48) { wrappers.slice(0, wrappers.length-32).forEach(w => w.remove()); }
+        }
+        window.addEventListener('scroll', appendLoop, { passive: true });
+        // Broken links loop back here
+        cards.addEventListener('click', (e)=>{
+          const a = (e.target instanceof Element) ? e.target.closest('a') : null;
+          if (a) {
+            e.preventDefault();
+            // 50% to /w/error (not found), 50% loop back to self
+            if (Math.random() < 0.5) location.href = '/w/error'; else location.href = location.pathname;
+          }
+        });
+        // Counting anomalies cycle
+        setInterval(()=>{ count.textContent = '項目数：不定（'+ randomCount() +'）'; }, 2600);
+        // A11y labels
+        title.setAttribute('aria-label','見出し：不明なタグ');
+        count.setAttribute('aria-label','項目数：不定');
+      })();
+      </script>
+    </>
   ) : (
-    <div class="grid cards">
-      {filtered.map((it) => (<WordCard item={it} />))}
-    </div>
+    <>
+      <h2>タグ: {tag}</h2>
+      {filtered.length === 0 ? (
+        <p class="meta">結果がありません。</p>
+      ) : (
+        <div class="grid cards">
+          {filtered.map((it) => (<WordCard item={it} />))}
+        </div>
+      )}
+    </>
   )}
 </Base>
